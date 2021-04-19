@@ -15,9 +15,12 @@
 VideoStreamController::VideoStreamController(QObject *parent)
     : QObject(parent)
     , m_cuptureTimer(new QTimer(this))
+    , m_fpsTimer(new QTimer(this))
     , m_settings()
+    , m_fps(0)
 {
-
+    connect(m_fpsTimer, &QTimer::timeout, this, &VideoStreamController::onFpsNeedUpdate);
+    m_fpsTimer->start(1000);
 }
 
 void VideoStreamController::startFrameCupture()
@@ -33,6 +36,8 @@ void VideoStreamController::stopFrameCupture()
 {
     m_cuptureTimer->stop();
     disconnect(m_cuptureTimer, &QTimer::timeout, this, &VideoStreamController::cupture);
+    disconnect(m_fpsTimer, &QTimer::timeout, this, &VideoStreamController::onFpsNeedUpdate);
+    m_fpsTimer->stop();
 }
 
 Datagram VideoStreamController::frameToDatagram()
@@ -73,6 +78,7 @@ void VideoStreamController::DatagramToFrame(Datagram datagram)
     if(reader.error()) {
         return;
     }
+    ++m_fps;
 }
 
 QImage VideoStreamController::frame() const
@@ -106,5 +112,12 @@ void VideoStreamController::resetTimer()
 
     m_cuptureTimer->stop();
     m_cuptureTimer->start(m_settings.fps());
+}
+
+void VideoStreamController::onFpsNeedUpdate()
+{
+    int fps = m_fps;
+    m_fps = 0;
+    emit fpsChanged(fps);
 }
 

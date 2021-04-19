@@ -25,6 +25,7 @@ class VideoStreamer : public QQuickPaintedItem
     Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
     Q_PROPERTY(QByteArray frameFormat READ frameFormat WRITE setFrameFormat NOTIFY frameFormatChanged)
     Q_PROPERTY(quint16 acceptTime READ acceptTime WRITE setAcceptTime NOTIFY acceptTimeChanged)
+    Q_PROPERTY(int fps READ fps NOTIFY fpsChanged)
 
 
 public:
@@ -79,6 +80,8 @@ public:
 
     virtual void paint(QPainter *painter) override;
 
+    int fps() const;
+
 public slots:
     //! сеттеры
     void setStatus(ConnectionStatus status);
@@ -108,6 +111,8 @@ private slots:
     //! Получен новый кадр
     void onFrameReceived();
 
+    void onFpsChanged(int);
+
 signals:
     void statusChanged(ConnectionStatus status);
     void portChanged(quint16 port);
@@ -123,6 +128,8 @@ signals:
     void endReseiving();
     //! отравить сообщение
     void sendMessage(QByteArray msg, QString addr);
+
+    void fpsChanged(int fps);
 
 private:
     //! Последний принятый кадр
@@ -150,6 +157,8 @@ private:
     QByteArray m_frameFormat;
     //! Переменная таймера принятия решения (для отображения пользователю)
     quint16 m_acceptTime;
+
+    int m_fps;
 };
 
 #endif // STREAMWINDOW_H

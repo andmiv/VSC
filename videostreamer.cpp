@@ -345,6 +345,15 @@ void VideoStreamer::onFrameReceived()
     update();
 }
 
+void VideoStreamer::onFpsChanged(int fps)
+{
+    if(m_fps == fps)
+        return;
+
+    m_fps = fps;
+    emit fpsChanged(m_fps);
+}
+
 void VideoStreamer::setPort(quint16 port)
 {
     if(m_videoClient->isProcessing() || m_videoServer->isProcessing())
@@ -397,6 +406,11 @@ QImage VideoStreamer::lastFrame() const
 void VideoStreamer::paint(QPainter *painter)
 {
     painter->drawImage(this->boundingRect(), m_videoServer->streamContoroller()->frame());
+}
+
+int VideoStreamer::fps() const
+{
+    return m_fps;
 }
 
 quint16 VideoStreamer::acceptTime() const

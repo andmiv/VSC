@@ -30,13 +30,18 @@ private slots:
     void cupture();
     void resetTimer();
 
+    void onFpsNeedUpdate();
+
 signals:
     void frameCuptured();
+    void fpsChanged(int);
 
 private:
     QTimer *m_cuptureTimer;
+    QTimer *m_fpsTimer;
     VideoStreamSettings m_settings;
     QImage m_mainFrame;
+    int m_fps;
 };
 
 #endif // VIDEOSTREAMCONTROLLER_H

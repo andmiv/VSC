@@ -10,6 +10,25 @@ Item {
     property bool isTransmitRequest: false
     VideoStreamer {
         id: streamWidget
+
+        Rectangle {
+            width: fps.implicitWidth + 20
+            height: fps.implicitHeight + 20
+            color: "white"
+            anchors {
+                top: parent.top
+                right: parent.right
+                topMargin: 10
+                rightMargin: 10
+            }
+            Text {
+                id: fps
+                text: streamWidget.fps
+                color: "black"
+                anchors.centerIn: parent
+            }
+        }
+
         anchors.fill: parent
         visible: status === VideoStreamer.Receiving ||
                  status === VideoStreamer.Transmitting
