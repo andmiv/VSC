@@ -34,8 +34,9 @@ void VideoStreamController::startFrameCupture()
 
 void VideoStreamController::stopFrameCupture()
 {
-    m_cuptureTimer->stop();
     disconnect(m_cuptureTimer, &QTimer::timeout, this, &VideoStreamController::cupture);
+    m_cuptureTimer->stop();
+
     disconnect(m_fpsTimer, &QTimer::timeout, this, &VideoStreamController::onFpsNeedUpdate);
     m_fpsTimer->stop();
 }
