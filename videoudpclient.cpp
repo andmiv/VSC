@@ -19,7 +19,8 @@ VideoUdpClient::VideoUdpClient(QObject *parent)
 
 VideoUdpClient::~VideoUdpClient()
 {
-    stopBroadcast();
+    // Это прокатит только с двойной диспетчеризацией
+//    stopBroadcast();
     if(m_datagramWatcher->isRunning())
         m_datagramWatcher->cancel();
     delete m_datagramWatcher;
@@ -68,7 +69,12 @@ void VideoUdpClient::saveDatagram()
 {
     if(!m_datagram.isEmpty())
         return;
-    m_datagram = m_datagramFuture.result();
+
+    Datagram newDatagram = m_datagramFuture.result();
+    if(newDatagram.isEmpty())
+        return;
+
+    m_datagram = newDatagram;
     initFrameTransmit();
 }
 

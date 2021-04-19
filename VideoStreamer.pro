@@ -8,6 +8,7 @@ CONFIG += c++11
 
 SOURCES += \
         datagram.cpp \
+        framecontainer.cpp \
         iservicetcpsocket.cpp \
         ivideoupdsocket.cpp \
         main.cpp \
@@ -37,6 +38,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     datagram.h \
+    framecontainer.h \
     iservicetcpsocket.h \
     ivideoupdsocket.h \
     mainwindow.h \

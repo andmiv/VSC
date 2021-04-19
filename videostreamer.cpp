@@ -27,7 +27,7 @@ VideoStreamer::VideoStreamer(QQuickItem *parent)
 {
     //Общая инициализация
     setPort(50000);
-    setFrameFormat("jpg");
+    setFrameFormat("png");
     qRegisterMetaType<ConnectionStatus>("ConnectionStatus");
     connect(m_acceptTimer, &QTimer::timeout, [&](){ setAcceptTime(acceptTime() - 1);});
 
@@ -42,7 +42,8 @@ VideoStreamer::VideoStreamer(QQuickItem *parent)
 
     //Общая инициализация для сервера и клиента
     VideoStreamController *streamController = new VideoStreamController(m_videoClient);
-    VideoStreamSettings streamSettings("jpg", this->width(), this->height(), this->x(), this->y(), 33);
+//    connect(streamController, &VideoStreamController::fpsChanged, this, &VideoStreamer::onFpsChanged);
+    VideoStreamSettings streamSettings("png", this->width(), this->height(), this->x(), this->y(), 33);
     streamController->setSettings(streamSettings);
 
     //Инициализация udp клиента
@@ -70,7 +71,8 @@ VideoStreamer::VideoStreamer(QQuickItem *parent)
 
     //Для тестов
     VideoStreamController *streamController_1 = new VideoStreamController(m_videoServer);
-    VideoStreamSettings streamSettings_1("jpg", this->width(), this->height(), this->x(), this->y(), 18);
+    connect(streamController_1, &VideoStreamController::fpsChanged, this, &VideoStreamer::onFpsChanged);
+    VideoStreamSettings streamSettings_1("png", this->width(), this->height(), this->x(), this->y(), 18);
     streamController_1->setSettings(streamSettings_1);
     //Инициализация udp сервера
     m_videoServer->setStreamController(streamController_1);

@@ -6,18 +6,17 @@
 #include <QApplication>
 #include <QScreen>
 #include <QDesktopWidget>
-#include <QBuffer>
-#include <QImageWriter>
-#include <QImageReader>
-
-#include <QDebug>
 
 VideoStreamController::VideoStreamController(QObject *parent)
     : QObject(parent)
     , m_cuptureTimer(new QTimer(this))
     , m_fpsTimer(new QTimer(this))
     , m_settings()
+    , m_containers()
+    , m_maxFramesCount(3)
+    , m_creating(false)
     , m_fps(0)
+    , m_decoding(false)
 {
     connect(m_fpsTimer, &QTimer::timeout, this, &VideoStreamController::onFpsNeedUpdate);
     m_fpsTimer->start(1000);
@@ -43,14 +42,15 @@ void VideoStreamController::stopFrameCupture()
 
 Datagram VideoStreamController::frameToDatagram()
 {
-    QByteArray data;
-    {
-        QBuffer frameBuf(&data);
-        frameBuf.open(QBuffer::WriteOnly);
-        QImageWriter writer(&frameBuf, m_settings.format());
-        writer.write(m_mainFrame);
-        frameBuf.close();
-    }
+    if(m_creating)
+        return Datagram();
+
+    m_creating = true;
+
+    FrameContainer f = m_containers.dequeue();
+    f.codeFrame();
+    QByteArray data = f.toByteArray();
+
     QByteArray title;
     {
         QDataStream stream(&title, QIODevice::WriteOnly);
@@ -59,32 +59,28 @@ Datagram VideoStreamController::frameToDatagram()
         stream << titleSize << checksum << m_settings.width() << m_settings.height();
         title.append(m_settings.format());
     }
+    m_creating = false;
     return Datagram(title, data);
 }
 
 void VideoStreamController::DatagramToFrame(Datagram datagram)
 {
-    QByteArray frame = datagram.data();
-    QBuffer frameBuf(&frame);
-    if(!frameBuf.open(QIODevice::ReadOnly)) {
-        qDebug() << "VideoStreamController::DatagramToFrame invalid frame";
+    if(m_decoding)
         return;
-    }
-    QImageReader reader(&frameBuf, m_settings.format());
-    if(!reader.canRead()) {
-        qDebug() << "VideoStreamController::DatagramToFrame cannot read frame";
-        return;
-    }
-    m_mainFrame = reader.read();
-    if(reader.error()) {
-        return;
-    }
+
+    m_decoding = true;
+
+    FrameContainer cont = FrameContainer::fromByteArray(datagram.data(), m_settings.width(), m_settings.height());
+    cont.decodeFrame();
+    m_sourceFrame = cont.toQImage();
+
     ++m_fps;
+    m_decoding = false;
 }
 
 QImage VideoStreamController::frame() const
 {
-    return m_mainFrame;
+    return m_sourceFrame;
 }
 
 VideoStreamSettings &VideoStreamController::settings()
@@ -100,9 +96,16 @@ void VideoStreamController::setSettings(const VideoStreamSettings &settings)
 
 void VideoStreamController::cupture()
 {
-    m_mainFrame = QApplication::screens().at(0)->grabWindow(QApplication::desktop()->winId(),
-                                                            m_settings.x(), m_settings.y(),
-                                                            m_settings.width(), m_settings.height()).toImage();
+    if(m_creating || m_maxFramesCount < m_containers.size())
+        return;
+
+    m_containers.enqueue(
+                FrameContainer::fromImage(
+                    QApplication::screens().at(0)->grabWindow(
+                        QApplication::desktop()->winId(),
+                        m_settings.x(), m_settings.y(),
+                        m_settings.width(), m_settings.height()).toImage()));
+
     emit frameCuptured();
 }
 
