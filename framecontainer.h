@@ -3,6 +3,12 @@
 
 #include <QImage>
 
+struct AVCodec;
+struct AVCodecContext;
+struct AVFrame;
+struct AVPacket;
+struct AVCodecParserContext;
+
 class FrameContainer
 {
     static const int BLOCK_SIZE;
@@ -22,9 +28,10 @@ class FrameContainer
 public:
 
     FrameContainer();
+    ~FrameContainer();
 
-    static FrameContainer fromImage(QImage img);
-    static FrameContainer fromByteArray(QByteArray ba, int imgWidth, int imgHeight);
+    static FrameContainer *fromImage(QImage img);
+    static FrameContainer *fromByteArray(QByteArray ba, int imgWidth, int imgHeight);
 
     void codeFrame();
     void decodeFrame();
@@ -33,9 +40,16 @@ public:
     QImage toQImage();
 
 private:
-    QVector<QVector<Block>> m_blocks;
     int m_width;
     int m_height;
+
+    AVCodec *m_codec;
+    AVCodecContext *m_codecContext;
+    AVFrame *m_frame;
+    AVPacket *m_packet;
+    AVCodecParserContext *m_parser;
+
+    static int timestap;
 };
 
 

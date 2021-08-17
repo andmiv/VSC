@@ -47,9 +47,10 @@ Datagram VideoStreamController::frameToDatagram()
 
     m_creating = true;
 
-    FrameContainer f = m_containers.dequeue();
-    f.codeFrame();
-    QByteArray data = f.toByteArray();
+    FrameContainer *f = m_containers.dequeue();
+    f->codeFrame();
+    QByteArray data = f->toByteArray();
+    delete f;
 
     QByteArray title;
     {
@@ -70,9 +71,9 @@ void VideoStreamController::DatagramToFrame(Datagram datagram)
 
     m_decoding = true;
 
-    FrameContainer cont = FrameContainer::fromByteArray(datagram.data(), m_settings.width(), m_settings.height());
-    cont.decodeFrame();
-    m_sourceFrame = cont.toQImage();
+    FrameContainer *cont = FrameContainer::fromByteArray(datagram.data(), m_settings.width(), m_settings.height());
+    cont->decodeFrame();
+    m_sourceFrame = cont->toQImage();
 
     ++m_fps;
     m_decoding = false;

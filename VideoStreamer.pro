@@ -36,6 +36,12 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+LIBS += -lavutil
+LIBS += -lavcodec
+
+INCLUDEPATH += $${SRC_DIR}/sipcore/services
+INCLUDEPATH += $${SRC_DIR}/sipcore/services/include
+
 HEADERS += \
     datagram.h \
     framecontainer.h \

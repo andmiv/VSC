@@ -43,7 +43,7 @@ private:
     QTimer *m_cuptureTimer;
     QTimer *m_fpsTimer;
     VideoStreamSettings m_settings;
-    QQueue<FrameContainer> m_containers;
+    QQueue<FrameContainer *> m_containers;
     int m_maxFramesCount;
     QImage m_sourceFrame;
     bool m_creating;
