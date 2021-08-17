@@ -11,20 +11,6 @@ struct AVCodecParserContext;
 
 class FrameContainer
 {
-    static const int BLOCK_SIZE;
-    static const int REF_BLOCK_LEN;
-
-    //! Y - unsingedPix[0]
-    //! Cb - unsingedPix[1]
-    //! Cr - pix.unsingedPix[2]
-    union Pixel {
-        quint8 unsignedPix[3];
-    };
-    struct Block {
-        Pixel pixels[8][8];
-        bool coded = false;
-    };
-
 public:
 
     FrameContainer();
@@ -49,7 +35,12 @@ private:
     AVPacket *m_packet;
     AVCodecParserContext *m_parser;
 
+    QByteArray m_data;
+
     static int timestap;
+
+    void tempEncoder();
+    void tempDecoder();
 };
 
 

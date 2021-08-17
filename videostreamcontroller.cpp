@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QScreen>
 #include <QDesktopWidget>
+#include <QDebug>
 
 VideoStreamController::VideoStreamController(QObject *parent)
     : QObject(parent)
@@ -48,6 +49,10 @@ Datagram VideoStreamController::frameToDatagram()
     m_creating = true;
 
     FrameContainer *f = m_containers.dequeue();
+    if(!f) {
+        qDebug() << "sender is empty";
+        return Datagram();
+    }
     f->codeFrame();
     QByteArray data = f->toByteArray();
     delete f;
@@ -72,6 +77,10 @@ void VideoStreamController::DatagramToFrame(Datagram datagram)
     m_decoding = true;
 
     FrameContainer *cont = FrameContainer::fromByteArray(datagram.data(), m_settings.width(), m_settings.height());
+    if(!cont) {
+        qDebug() << "receiver is empty";
+        return;
+    }
     cont->decodeFrame();
     m_sourceFrame = cont->toQImage();
 

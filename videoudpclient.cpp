@@ -126,7 +126,7 @@ void VideoUdpClient::endFrameTransmit()
 void VideoUdpClient::sendDatagram()
 {
     for(int i = 0; i < m_settings.packageCount() && !m_datagram.isEmpty(); ++i) {
-        short status = socket()->write(m_datagram.getAndEraseFirsBytes(m_settings.packageSize()));
+        short status = socket()->write(m_datagram.getAndEraseFirsBytes(m_datagram.data().size()));
         if(status < 0) {
             emit transmitionError(socket()->errorString());
             stopBroadcast();

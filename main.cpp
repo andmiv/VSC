@@ -12,6 +12,8 @@ extern "C"
 }
 
 #include <string>
+#include <iostream>
+
 #define NON
 
 #ifdef NON
@@ -212,6 +214,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt, FILE 
         printf(msg.data(), pkt->pts, pkt->size);
         fwrite(pkt->data, 1, pkt->size, outfile);
         av_packet_unref(pkt);
+        std::cout << "write new frame *********************************";
     }
 }
 
@@ -226,12 +229,12 @@ int main(int argc, char *argv[])
     AVPacket *pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    if(argc <= 1) {
-        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
-        exit(0);
-    }
+//    if(argc <= 1) {
+//        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
+//        exit(0);
+//    }
 
-    filename = argv[1];
+    filename = "/home/mranderson/gitProjects/test";
     //    codec_name = argv[2];
 
     codec = avcodec_find_encoder(AV_CODEC_ID_H264);
@@ -297,7 +300,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    for(i = 0; i < 1200; ++i) {
+    for(i = 0; i < 10; ++i) {
         fflush(stdout);
 
         ret = av_frame_make_writable(frame);
