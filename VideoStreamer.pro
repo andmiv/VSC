@@ -38,6 +38,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 LIBS += -lavutil
 LIBS += -lavcodec
+LIBS += -lavdevice
+LIBS += -lavformat
 
 INCLUDEPATH += $${SRC_DIR}/sipcore/services
 INCLUDEPATH += $${SRC_DIR}/sipcore/services/include

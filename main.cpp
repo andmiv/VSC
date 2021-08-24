@@ -9,28 +9,96 @@ extern "C"
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/error.h>
+#include <libavdevice/avdevice.h>
+#include <libavformat/avformat.h>
 }
 
 #include <string>
 #include <iostream>
 
-#define NON
+#define GRAB
+
+#include <QApplication>
 
 #ifdef NON
 
-#include <QApplication>
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-        QApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-        MainWindow w;
-        w.open();
+    MainWindow w;
+    w.open();
 
     return app.exec();
 }
 
+#endif
+
+#ifdef GRAB
+
+#include <QDebug>
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    avdevice_register_all();
+    avformat_network_init();
+    AVFormatContext *context = avformat_alloc_context();
+    AVInputFormat *format = av_find_input_format("x11grab");;
+    AVDictionary *dict = nullptr;
+
+    if(avformat_open_input(&context, ":1.0+10,20", format, &dict) != 0){
+        printf("Couldn't open input stream.\n");
+        return -1;
+    }
+
+    if(avformat_find_stream_info(context, NULL) < 0)
+    {
+        printf("Couldn't find stream information.\n");
+        return -1;
+    }
+//    int videoindex = -1;
+//    for(unsigned int i=0; i < context->nb_streams; i++) {
+//        if(context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+//        {
+//            videoindex=i;
+//            break;
+//        }
+//    }
+
+//    if(videoindex==-1)
+//    {
+//        printf("Didn't find a video stream.\n");
+//        return -1;
+//    }
+//    AVCodecContext    *codecContext;
+//    AVCodec			  *codec;
+
+//    codecContext = context->streams[videoindex]->codec;
+//    codec = avcodec_find_decoder(codecContext->codec_id);
+//    if(codec==NULL)
+//    {
+//        printf("Codec not found.\n");
+//        return -1;
+//    }
+//    if(avcodec_open2(codecContext, codec, NULL)<0)
+//    {
+//        printf("Could not open codec.\n");
+//        return -1;
+//    }
+//    AVFrame	*pFrame,*pFrameYUV;
+//    pFrame=av_frame_alloc();
+//    pFrameYUV=av_frame_alloc();
+
+    AVPacket *packet= av_packet_alloc();
+
+    while(!av_read_frame(context, packet));
+    qDebug() << "error";
+
+    return 0;// app.exec();
+}
 #endif
 
 #ifdef DECODER
@@ -73,7 +141,7 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, const
 
         snprintf(buf, sizeof(buf), "%s-%d", filename, dec_ctx->frame_number);
         pgm_save(frame->data[0], frame->linesize[0],
-                 frame->width, frame->height, buf);
+                frame->width, frame->height, buf);
     }
 }
 
@@ -229,10 +297,10 @@ int main(int argc, char *argv[])
     AVPacket *pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-//    if(argc <= 1) {
-//        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
-//        exit(0);
-//    }
+    //    if(argc <= 1) {
+    //        fprintf(stderr, "Usage: %s <output file> <codec name>\n", argv[0]);
+    //        exit(0);
+    //    }
 
     filename = "/home/mranderson/gitProjects/test";
     //    codec_name = argv[2];
@@ -257,18 +325,18 @@ int main(int argc, char *argv[])
     c->width = 1920;
     c->height = 1080;
     c->time_base = (AVRational) {
-        2, 60
-    };
+            2, 60
+};
     c->framerate = (AVRational) {
-        60, 2
-    };
+            60, 2
+};
 
     c->gop_size = 10;
     c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
-//    if(codec->id == AV_CODEC_ID_H264)
-//        av_opt_set(c->priv_data, "preset", "slow", 0);
+    //    if(codec->id == AV_CODEC_ID_H264)
+    //        av_opt_set(c->priv_data, "preset", "slow", 0);
 
     ret = avcodec_open2(c, codec, nullptr);
     if(ret < 0) {
