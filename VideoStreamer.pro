@@ -40,6 +40,7 @@ LIBS += -lavutil
 LIBS += -lavcodec
 LIBS += -lavdevice
 LIBS += -lavformat
+LIBS += -lswscale
 
 INCLUDEPATH += $${SRC_DIR}/sipcore/services
 INCLUDEPATH += $${SRC_DIR}/sipcore/services/include
