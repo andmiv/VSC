@@ -103,15 +103,15 @@ int main(int argc, char *argv[])
 
     // Выходной контекст в формате yuv/h264 {
 
-//    AVFormatContext *yuv_formatContext = nullptr;
-//    AVStream *yuv_stream = nullptr;
+    AVFormatContext *yuv_formatContext = nullptr;
+    AVStream *yuv_stream = nullptr;
     AVCodecContext *yuv_codecContext = nullptr;
     AVCodec *yuv_codec = nullptr;
     AVPacket *yuv_packet = nullptr;
     AVFrame *yuv_frame = nullptr;
 
-//    int ret = avformat_alloc_output_context2(&yuv_formatContext, nullptr, nullptr, ofile_name);
-//    Q_ASSERT(ret >= 0);
+    int ret = avformat_alloc_output_context2(&yuv_formatContext, nullptr, nullptr, ofile_name);
+    Q_ASSERT(ret >= 0);
 
     int videoindex = -1;
     for(unsigned int i = 0; i < x11_formatContext->nb_streams; i++) {
@@ -119,11 +119,11 @@ int main(int argc, char *argv[])
             x11_stream = x11_formatContext->streams[i];
             x11_codecpar = x11_stream->codecpar;
 
-//            yuv_stream = avformat_new_stream(yuv_formatContext, nullptr);
-//            Q_ASSERT(yuv_stream != nullptr);
+            yuv_stream = avformat_new_stream(yuv_formatContext, nullptr);
+            Q_ASSERT(yuv_stream != nullptr);
 
-//            int ret = avcodec_parameters_copy(yuv_stream->codecpar, x11_codecpar);
-//            Q_ASSERT(ret >= 0);
+            int ret = avcodec_parameters_copy(yuv_stream->codecpar, x11_codecpar);
+            Q_ASSERT(ret >= 0);
 
             videoindex = i;
             break;
@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
     avcodec_parameters_to_context(x11_codecContext, x11_codecpar);
     avcodec_open2(x11_codecContext, x11_codec, nullptr);
 
-//    if(yuv_formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-//        yuv_formatContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+    if(yuv_formatContext->oformat->flags & AVFMT_GLOBALHEADER)
+        yuv_formatContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     x11_frame = av_frame_alloc();
     Q_ASSERT(x11_frame != nullptr);
@@ -171,12 +171,12 @@ int main(int argc, char *argv[])
     yuv_codecContext->rc_min_rate = 2.5 * 1000 * 1000;
 
     yuv_codecContext->time_base = av_inv_q(av_guess_frame_rate(x11_formatContext, x11_stream, nullptr));
-//    yuv_stream->time_base = yuv_codecContext->time_base;
+    yuv_stream->time_base = yuv_codecContext->time_base;
 
-    int ret = avcodec_open2(yuv_codecContext, yuv_codec, nullptr);
+    ret = avcodec_open2(yuv_codecContext, yuv_codec, nullptr);
     Q_ASSERT(ret == 0);
-//    ret = avcodec_parameters_from_context(yuv_stream->codecpar, yuv_codecContext);
-//    Q_ASSERT(ret == 0);
+    ret = avcodec_parameters_from_context(yuv_stream->codecpar, yuv_codecContext);
+    Q_ASSERT(ret == 0);
 
     yuv_packet = av_packet_alloc();
     Q_ASSERT(yuv_packet != nullptr);
@@ -195,13 +195,13 @@ int main(int argc, char *argv[])
 
     // Открываем выход {
 
-//    if(!(yuv_formatContext->oformat->flags & AVFMT_NOFILE)) {
-//        int ret = avio_open(&yuv_formatContext->pb, ofile_name, AVIO_FLAG_WRITE);
-//        Q_ASSERT(ret >= 0);
-//    }
+    if(!(yuv_formatContext->oformat->flags & AVFMT_NOFILE)) {
+        int ret = avio_open(&yuv_formatContext->pb, ofile_name, AVIO_FLAG_WRITE);
+        Q_ASSERT(ret >= 0);
+    }
 
-//    ret = avformat_write_header(yuv_formatContext, nullptr);
-//    Q_ASSERT(ret >= 0);
+    ret = avformat_write_header(yuv_formatContext, nullptr);
+    Q_ASSERT(ret >= 0);
 
     // }
 
@@ -280,14 +280,14 @@ int main(int argc, char *argv[])
                          << "\nout dts:" << yuv_frame->pkt_dts << "\npkt dts:" << x11_packet->dts
                          << "\nout pos in stream:" << yuv_packet->pos
                          << "\nin avg_frame_rate:" << x11_stream->avg_frame_rate.num << "/" << x11_stream->avg_frame_rate.den
-//                         << "\nout avg_frame_rate:" << yuv_stream->avg_frame_rate.num << "/" << yuv_stream->avg_frame_rate.den
+                         << "\nout avg_frame_rate:" << yuv_stream->avg_frame_rate.num << "/" << yuv_stream->avg_frame_rate.den
                          << "\nout duration:" << yuv_packet->duration
                          << "\nin pict type:" << av_get_picture_type_char(x11_frame->pict_type)
                          << "\nout pict type:" << av_get_picture_type_char(yuv_frame->pict_type)
                          << "\nOUT_PACK_SIZE:" << yuv_packet->size << '\n';
 
-//                av_packet_rescale_ts(yuv_packet, yuv_stream->time_base, x11_stream->time_base);
-//                ret = av_interleaved_write_frame(yuv_formatContext, yuv_packet);
+                av_packet_rescale_ts(yuv_packet, yuv_stream->time_base, x11_stream->time_base);
+                ret = av_interleaved_write_frame(yuv_formatContext, yuv_packet);
             }
 
             av_packet_unref(yuv_packet);
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
         ++index;
     }
 
-//    av_write_trailer(yuv_formatContext);
+    av_write_trailer(yuv_formatContext);
     return 0;
 }
 
