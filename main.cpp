@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
 #ifdef GRAB
 
 #include <QDebug>
+#include <QTime>
 
 //static void save_gray_frame(unsigned char *buf, int wrap, int xsize, int ysize, const char *filename)
 //{
@@ -74,6 +75,7 @@ int main(int argc, char *argv[])
 
     AVFormatContext *x11_formatContext = avformat_alloc_context();
     AVInputFormat *x11_format = av_find_input_format("x11grab");
+
     AVStream *x11_stream = nullptr;
     AVCodecParameters *x11_codecpar = nullptr;
     AVDictionary *dict = nullptr;
@@ -101,15 +103,15 @@ int main(int argc, char *argv[])
 
     // Выходной контекст в формате yuv/h264 {
 
-    AVFormatContext *yuv_formatContext = nullptr;
-    AVStream *yuv_stream = nullptr;
+//    AVFormatContext *yuv_formatContext = nullptr;
+//    AVStream *yuv_stream = nullptr;
     AVCodecContext *yuv_codecContext = nullptr;
     AVCodec *yuv_codec = nullptr;
     AVPacket *yuv_packet = nullptr;
     AVFrame *yuv_frame = nullptr;
 
-    int ret = avformat_alloc_output_context2(&yuv_formatContext, nullptr, nullptr, ofile_name);
-    Q_ASSERT(ret >= 0);
+//    int ret = avformat_alloc_output_context2(&yuv_formatContext, nullptr, nullptr, ofile_name);
+//    Q_ASSERT(ret >= 0);
 
     int videoindex = -1;
     for(unsigned int i = 0; i < x11_formatContext->nb_streams; i++) {
@@ -117,11 +119,11 @@ int main(int argc, char *argv[])
             x11_stream = x11_formatContext->streams[i];
             x11_codecpar = x11_stream->codecpar;
 
-            yuv_stream = avformat_new_stream(yuv_formatContext, nullptr);
-            Q_ASSERT(yuv_stream != nullptr);
+//            yuv_stream = avformat_new_stream(yuv_formatContext, nullptr);
+//            Q_ASSERT(yuv_stream != nullptr);
 
-            int ret = avcodec_parameters_copy(yuv_stream->codecpar, x11_codecpar);
-            Q_ASSERT(ret >= 0);
+//            int ret = avcodec_parameters_copy(yuv_stream->codecpar, x11_codecpar);
+//            Q_ASSERT(ret >= 0);
 
             videoindex = i;
             break;
@@ -144,8 +146,8 @@ int main(int argc, char *argv[])
     avcodec_parameters_to_context(x11_codecContext, x11_codecpar);
     avcodec_open2(x11_codecContext, x11_codec, nullptr);
 
-    if(yuv_formatContext->oformat->flags & AVFMT_GLOBALHEADER)
-        yuv_formatContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+//    if(yuv_formatContext->oformat->flags & AVFMT_GLOBALHEADER)
+//        yuv_formatContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     x11_frame = av_frame_alloc();
     Q_ASSERT(x11_frame != nullptr);
@@ -169,12 +171,12 @@ int main(int argc, char *argv[])
     yuv_codecContext->rc_min_rate = 2.5 * 1000 * 1000;
 
     yuv_codecContext->time_base = av_inv_q(av_guess_frame_rate(x11_formatContext, x11_stream, nullptr));
-    yuv_stream->time_base = yuv_codecContext->time_base;
+//    yuv_stream->time_base = yuv_codecContext->time_base;
 
-    ret = avcodec_open2(yuv_codecContext, yuv_codec, nullptr);
+    int ret = avcodec_open2(yuv_codecContext, yuv_codec, nullptr);
     Q_ASSERT(ret == 0);
-    ret = avcodec_parameters_from_context(yuv_stream->codecpar, yuv_codecContext);
-    Q_ASSERT(ret == 0);
+//    ret = avcodec_parameters_from_context(yuv_stream->codecpar, yuv_codecContext);
+//    Q_ASSERT(ret == 0);
 
     yuv_packet = av_packet_alloc();
     Q_ASSERT(yuv_packet != nullptr);
@@ -193,19 +195,18 @@ int main(int argc, char *argv[])
 
     // Открываем выход {
 
-    if(!(yuv_formatContext->oformat->flags & AVFMT_NOFILE)) {
-        int ret = avio_open(&yuv_formatContext->pb, ofile_name, AVIO_FLAG_WRITE);
-        Q_ASSERT(ret >= 0);
-    }
+//    if(!(yuv_formatContext->oformat->flags & AVFMT_NOFILE)) {
+//        int ret = avio_open(&yuv_formatContext->pb, ofile_name, AVIO_FLAG_WRITE);
+//        Q_ASSERT(ret >= 0);
+//    }
 
-    ret = avformat_write_header(yuv_formatContext, nullptr);
-    Q_ASSERT(ret >= 0);
+//    ret = avformat_write_header(yuv_formatContext, nullptr);
+//    Q_ASSERT(ret >= 0);
 
     // }
 
     // Инициализация конвертера {
 
-    av_image_alloc(yuv_frame->data, yuv_frame->linesize, x11_codecContext->width, x11_codecContext->height, AV_PIX_FMT_YUV420P, 32);
     SwsContext *convertContext = sws_getContext(x11_codecContext->width,
                                                 x11_codecContext->height,
                                                 x11_codecContext->pix_fmt,
@@ -220,9 +221,13 @@ int main(int argc, char *argv[])
     // }
 
 
+//    yuv_stream->avg_frame_rate.den = x11_stream->avg_frame_rate.den;
+//    yuv_stream->avg_frame_rate.num = x11_stream->avg_frame_rate.num;
+
 
     int index = 0;
     bool exit = false;
+
     while(!exit && index < 6000) {
         exit = av_read_frame(x11_formatContext, x11_packet);
         if(exit)
@@ -243,7 +248,8 @@ int main(int argc, char *argv[])
                       yuv_frame->data,
                       yuv_frame->linesize);
 
-            yuv_frame->pts = x11_frame->pts;
+            yuv_frame->pts = index;
+//            yuv_frame->pict_type = x11_frame->pict_type;
 
 //            qDebug() << "Frame:" << av_get_picture_type_char(x11_frame->pict_type)
 //                     << "\nFrame_num:" << x11_codecContext->frame_number
@@ -263,64 +269,39 @@ int main(int argc, char *argv[])
                 Q_ASSERT(ret >= 0);
 
                 yuv_packet->stream_index = x11_packet->stream_index;
-                yuv_packet->duration = x11_stream->time_base.den
-                                       / x11_stream->time_base.num
-                                       / x11_stream->avg_frame_rate.num
-                                       * yuv_stream->avg_frame_rate.den;
+                //                yuv_packet->duration = x11_stream->time_base.den
+                //                                       / x11_stream->time_base.num
+                //                                       / x11_stream->avg_frame_rate.num
+                //                                       * yuv_stream->avg_frame_rate.den;
 
-                av_packet_rescale_ts(yuv_packet, yuv_stream->time_base, x11_stream->time_base);
-                ret = av_interleaved_write_frame(yuv_formatContext, yuv_packet);
+                qDebug() << "out pts:" << yuv_frame->pts
+                         << "\nout time_base:" << yuv_codecContext->time_base.num << "/" << yuv_codecContext->time_base.den
+                         << "\nout framerate:" << yuv_codecContext->framerate.num << "/" << yuv_codecContext->framerate.den
+                         << "\nout dts:" << yuv_frame->pkt_dts << "\npkt dts:" << x11_packet->dts
+                         << "\nout pos in stream:" << yuv_packet->pos
+                         << "\nin avg_frame_rate:" << x11_stream->avg_frame_rate.num << "/" << x11_stream->avg_frame_rate.den
+//                         << "\nout avg_frame_rate:" << yuv_stream->avg_frame_rate.num << "/" << yuv_stream->avg_frame_rate.den
+                         << "\nout duration:" << yuv_packet->duration
+                         << "\nin pict type:" << av_get_picture_type_char(x11_frame->pict_type)
+                         << "\nout pict type:" << av_get_picture_type_char(yuv_frame->pict_type)
+                         << "\nOUT_PACK_SIZE:" << yuv_packet->size << '\n';
+
+//                av_packet_rescale_ts(yuv_packet, yuv_stream->time_base, x11_stream->time_base);
+//                ret = av_interleaved_write_frame(yuv_formatContext, yuv_packet);
             }
 
             av_packet_unref(yuv_packet);
-//            av_packet_free(&yuv_packet);
-
             av_frame_unref(x11_frame);
         }
         av_packet_unref(x11_packet);
 
         ++index;
-
-        int i = 100000;
-//        while(i)
-//            --i;
     }
 
-    av_write_trailer(yuv_formatContext);
-
-    //    while(av_read_frame(x11_formatContext, x11_packet) >= 0 && !err) {
-    //        qDebug() << "Packet_size:" << x11_packet->size;
-    //        int ret = avcodec_send_packet(x11_codecContext, x11_packet);
-    //        if(ret < 0)
-    //            qDebug() << "avcodec_send_packet error";
-
-    //        while(ret >= 0 && !err) {
-    //            ret = avcodec_receive_frame(x11_codecContext, x11_frame);
-    //            if(ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-    //                continue;
-
-    //            else if(ret < 0) {
-    //                qDebug() << "Error while receiving a frame from the decoder";
-    //                continue;
-    //            }
-
-
-
-
-    //            if(yuvFrame->format != AV_PIX_FMT_YUV420P)
-    //                qDebug() << "frame x11_format error" << yuvFrame->format;
-
-    //            //            save_gray_frame(yuvFrame->data[0], yuvFrame->linesize[0], yuvFrame->width, yuvFrame->height, frame_filename.toStdString().data());
-
-    //            err = index > 1200;
-    //            ++index;
-
-    //        }
-
-    //    }
-
-    return 0;// app.exec();
+//    av_write_trailer(yuv_formatContext);
+    return 0;
 }
+
 #endif
 
 #ifdef DECODER
