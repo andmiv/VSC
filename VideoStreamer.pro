@@ -1,4 +1,4 @@
-QT += core gui qml widgets quick
+QT += core gui qml widgets quick multimedia
 
 CONFIG += c++11
 
@@ -8,6 +8,7 @@ CONFIG += c++11
 
 SOURCES += \
         datagram.cpp \
+        framecontainer.cpp \
         iservicetcpsocket.cpp \
         ivideoupdsocket.cpp \
         main.cpp \
@@ -35,8 +36,18 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+LIBS += -lavutil
+LIBS += -lavcodec
+LIBS += -lavdevice
+LIBS += -lavformat
+LIBS += -lswscale
+
+INCLUDEPATH += $${SRC_DIR}/sipcore/services
+INCLUDEPATH += $${SRC_DIR}/sipcore/services/include
+
 HEADERS += \
     datagram.h \
+    framecontainer.h \
     iservicetcpsocket.h \
     ivideoupdsocket.h \
     mainwindow.h \
