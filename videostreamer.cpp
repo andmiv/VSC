@@ -77,10 +77,10 @@ VideoStreamer::VideoStreamer(QQuickItem *parent)
     connect(this, &VideoStreamer::acceptStream, m_videoServer, &VideoUdpServer::acceptBroadcast);
     connect(m_videoServer, &VideoUdpServer::frameReseived, this, &VideoStreamer::onFrameReceived);
     connect(this, &VideoStreamer::endReseiving, m_videoServer, &VideoUdpServer::stopBroadcast);
-//    connect(m_videoServer, &VideoUdpServer::sizeChanged, [=](quint16 width, quint16 height){
-//        this->setWidth(width);
-//        this->setHeight(height);
-//    });
+    //    connect(m_videoServer, &VideoUdpServer::sizeChanged, [=](quint16 width, quint16 height){
+    //        this->setWidth(width);
+    //        this->setHeight(height);
+    //    });
 
     m_videoClient->moveToThread(m_videoThread);
     m_videoServer->moveToThread(m_videoThread);
@@ -261,12 +261,12 @@ void VideoStreamer::onMessageReceived(QByteArray msg, QString addr)
         m_acceptTimer->start(1000);
         break;
     case TransmitRequestAccepted:
-                if(status() != OutgoingConnection) {
-                    qDebug() << "VideoStreamer::onMessageReseived TransmitRequestAccepted: there was no outgoing request to host" << addr;
-                    stopTransmitting();
-                    m_tcpAddress = QHostAddress::LocalHost;
-                    return;
-                }
+//        if(status() != OutgoingConnection) {
+//            qDebug() << "VideoStreamer::onMessageReseived TransmitRequestAccepted: there was no outgoing request to host" << addr;
+//            stopTransmitting();
+//            m_tcpAddress = QHostAddress::LocalHost;
+//            return;
+//        }
         if(m_udpAddress.toString() != addr) {
             qDebug() << "VideoStreamer::onMessageReseived TransmitRequestAccepted: the request was answered by an unknown address" << addr;
             stopTransmitting();
@@ -288,12 +288,12 @@ void VideoStreamer::onMessageReceived(QByteArray msg, QString addr)
         m_acceptTimer->start(1000);
         break;
     case ReceiveRequestAccepted:
-                if(status() != OutgoingConnection) {
-                    qDebug() << "VideoStreamer::onMessageReseived ReceiveRequestAccepted: there was no outgoing request to host" << addr;
-                    stopReceiving();
-                    m_tcpAddress = QHostAddress::LocalHost;
-                    return;
-                }
+        if(status() != OutgoingConnection) {
+            qDebug() << "VideoStreamer::onMessageReseived ReceiveRequestAccepted: there was no outgoing request to host" << addr;
+            stopReceiving();
+            m_tcpAddress = QHostAddress::LocalHost;
+            return;
+        }
         if(m_udpAddress.toString() != addr) {
             qDebug() << "VideoStreamer::onMessageReseived ReceiveRequestAccepted: the request was answered by an unknown address" << addr;
             stopReceiving();
